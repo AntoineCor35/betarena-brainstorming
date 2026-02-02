@@ -56,11 +56,42 @@ L'architecture de BetArena repose sur une approche modulaire et scalable, sépar
 
 #### Adéquation avec les besoins
 - Interface réactive pour afficher les cotes en temps réel
-- Gestion des états complexes (paris, solde, historique) via Redux/Context
+- Gestion des états complexes (paris, solde, historique) via Zustand
 - Navigation fluide entre les différentes sections (matchs, portefeuille, profil)
 - Intégration facile avec les wallets Ethereum (MetaMask Mobile, WalletConnect)
 
-### 2. Backend API - Node.js (TypeScript)
+### 2. State Management - Zustand (avec Redux Toolkit en alternative)
+
+#### Justification
+- **Zustand** : Bibliothèque ultra-légère pour la gestion d'état
+- **API Simplifiée** : Moins de boilerplate que Redux traditionnel
+- **TypeScript natif** : Support TypeScript excellent avec inférence de types
+- **Performance** : Re-renders optimisés, pas de Context Provider nécessaire
+- **DevTools** : Intégration avec Redux DevTools pour le debugging
+- **Scalabilité** : Architecture modulaire permettant de séparer les stores par domaine
+
+#### Alternative - Redux Toolkit
+- **Standard industriel** : Largement adopté dans l'écosystème React
+- **Toolkit moderne** : Redux Toolkit simplifie considérablement l'utilisation classique de Redux
+- **Middleware riche** : Redux Thunk, Redux Saga pour la gestion asynchrone
+- **Écosystème mature** : Nombreuses extensions (Redux Persist, etc.)
+
+#### Choix recommandé : Zustand
+Pour BetArena, **Zustand** est privilégié car :
+- Application mobile nécessitant des performances optimales
+- Simplicité de maintenance pour une équipe réduite
+- Courbe d'apprentissage rapide
+- Bundle size minimal (critique pour le mobile)
+
+#### Adéquation avec les besoins
+- **Gestion du portefeuille** : Store dédié pour le solde, tokens, transactions
+- **État des paris** : Suivi en temps réel des paris actifs et historique
+- **Données utilisateur** : Profil, préférences, authentification (JWT)
+- **Cache des matchs** : Données des matchs en cours et à venir
+- **WebSocket state** : Synchronisation des updates en temps réel (cotes, résultats)
+- **Persistance** : Sauvegarde locale avec AsyncStorage pour l'offline mode
+
+### 3. Backend API - Node.js (TypeScript)
 
 #### Justification
 - **JavaScript/TypeScript** : Cohérence technologique avec le frontend
@@ -76,7 +107,7 @@ L'architecture de BetArena repose sur une approche modulaire et scalable, sépar
 - Gestion de l'authentification JWT et des sessions utilisateur
 - Orchestration entre la blockchain et la base de données
 
-### 3. Web3 - Solidity (TypeScript)
+### 4. Web3 - Solidity (TypeScript)
 
 #### Justification
 - **Solidity** : Langage de référence pour les smart contracts Ethereum
@@ -90,7 +121,7 @@ L'architecture de BetArena repose sur une approche modulaire et scalable, sépar
 - **Immutabilité** : Garantie de non-manipulation des résultats
 - **Interopérabilité** : Possibilité d'intégrer avec d'autres DApps Ethereum
 
-### 4. Data - Python
+### 5. Data - Python
 
 #### Justification
 - **Analyse de données** : Bibliothèques puissantes (Pandas, NumPy, Scikit-learn)
@@ -104,7 +135,7 @@ L'architecture de BetArena repose sur une approche modulaire et scalable, sépar
 - Génération de rapports et analytics pour l'administration
 - Intégration d'APIs Esport (Riot Games, PandaScore, etc.)
 
-### 5. Automatisation - n8n
+### 6. Automatisation - n8n
 
 #### Justification
 - **Low-code** : Création de workflows sans code complexe
@@ -118,7 +149,7 @@ L'architecture de BetArena repose sur une approche modulaire et scalable, sépar
 - Synchronisation entre les données Esport et la base de données
 - Tâches planifiées (distribution de tokens quotidiens, clôture des paris)
 
-### 6. DevOps - Docker & GitHub Actions
+### 7. DevOps - Docker & GitHub Actions
 
 #### Justification Docker
 - **Containerisation** : Environnements reproductibles (dev/staging/prod)
@@ -138,7 +169,7 @@ L'architecture de BetArena repose sur une approche modulaire et scalable, sépar
 - Déploiement automatique sur environnement de staging
 - Gestion des secrets (clés API, private keys) via GitHub Secrets
 
-### 7. Base de Données - PostgreSQL
+### 8. Base de Données - PostgreSQL
 
 #### Justification
 - **ACID** : Garantie de cohérence des transactions (crucial pour les paris)
@@ -154,7 +185,48 @@ L'architecture de BetArena repose sur une approche modulaire et scalable, sépar
 - Relations complexes (many-to-many entre utilisateurs et paris)
 - Intégrité référentielle garantie
 
----
+### 9. ORM - Prisma
+
+#### Justification
+- **Type-safe** : Génération automatique de types TypeScript à partir du schéma de base de données
+- **Developer Experience** : Autocomplétion intelligente et détection d'erreurs au moment du développement
+- **Migrations** : Système de migrations déclaratif et versionnement automatique du schéma
+- **Prisma Client** : API intuitive et moderne pour interagir avec la base de données
+- **Prisma Studio** : Interface graphique pour visualiser et éditer les données
+- **Performance** : Requêtes optimisées et support du batching automatique
+
+#### Avantages par rapport aux alternatives
+- **vs TypeORM** : Meilleure inférence de types, API plus simple, migrations plus fiables
+- **vs Sequelize** : Type-safety native, pas besoin de synchronisation manuelle des types
+- **vs SQL brut** : Sécurité accrue (protection contre SQL injection), code plus maintenable
+
+#### Adéquation avec les besoins BetArena
+- **Modélisation des relations complexes** : Users ↔ Bets ↔ Matches ↔ Teams
+- **Transactions ACID** : Support natif des transactions pour les opérations critiques (paris, paiements)
+- **Requêtes complexes** : API fluide pour les jointures et agrégations (statistiques, historiques)
+- **Seed data** : Facilité de peuplement de la base avec des données initiales (matchs, équipes)
+- **Type-safety end-to-end** : Depuis le schéma DB jusqu'au frontend via les API types
+
+#### Fonctionnalités clés utilisées
+- **Relations bidirectionnelles** : Navigation facile entre utilisateurs, paris et matchs
+- **Prisma Migrate** : Gestion automatique des changements de schéma en production
+- **Prisma Client** : Requêtes type-safe avec autocomplétion
+
+#### Intégration avec le stack
+- **Backend Node.js** : Import direct du Prisma Client dans les services
+- **PostgreSQL** : Prisma gère automatiquement les connexions et le pooling
+- **TypeScript** : Types générés synchronisés avec le schéma de base de données
+- **CI/CD** : Migrations automatiques dans le pipeline de déploiement
+- **Testing** : Facilité de création d'une base de test isolée
+
+#### Sécurité et Performance
+- **Prepared Statements** : Protection native contre les injections SQL
+- **Connection Pooling** : Gestion optimale des connexions à PostgreSQL
+- **Query Optimization** : Prisma génère des requêtes SQL optimisées
+- **Soft Deletes** : Implémentation facile pour conserver l'historique
+- **Row Level Security** : Compatible avec les politiques de sécurité PostgreSQL
+
+--------------
 
 ## Stratégie de Tests
 
@@ -169,6 +241,12 @@ L'architecture de BetArena repose sur une approche modulaire et scalable, sépar
 - **Supertest** : Tests d'intégration des routes API
 - **Mock** : Simulation des appels blockchain et base de données
 - **ESLint** : Analyse statique du code
+
+### ORM (Prisma)
+- **Prisma Client Mock** : Tests unitaires sans base de données réelle
+- **Test Database** : Base PostgreSQL dédiée pour les tests d'intégration
+- **Seed Scripts** : Données de test cohérentes et reproductibles
+- **Migration Testing** : Validation des migrations avant déploiement
 
 ### Smart Contracts (Solidity)
 - **Hardhat** : Framework de test des contrats
